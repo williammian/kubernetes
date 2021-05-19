@@ -1,0 +1,1 @@
+https://stackoverflow.com/questions/40459280/docker-cannot-start-on-windows

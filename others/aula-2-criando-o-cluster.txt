@@ -1,0 +1,53 @@
+Criando o cluster
+
+Ver informações do cluster
+
+kubectl get nodes
+
+NAME             STATUS   ROLES    AGE     VERSION
+docker-desktop   Ready    master   8m38s   v1.19.7
+
+--------------------------------------------
+
+Kubernetes e Windows
+
+Para criar um cluster do Kubernetes no Windows utiliza-se o próprio Docker Desktop.
+
+Settings > Kubernetes > Enable Kubernetes
+
+--------------------------------------------
+
+Kubernetes e Linux
+
+https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+
+Primeiro para o kubectl:
+
+sudo apt-get install curl -y
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+Agora para o minikube:
+
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.12.1/minikube-linux-amd64 \ && chmod +x minikube
+sudo install minikube /usr/local/bin/
+
+-------------------------------------------
+
+Inicializando o cluster no Google Cloud Platform
+
+cloud.google.com
+
+Criar projeto
+
+Kubernetes Engine
+
+-------------------------------------------
+
+Cloud Providers
+
+https://v1-18.docs.kubernetes.io/docs/concepts/cluster-administration/cloud-providers/
+
+--------------------------------------------
+

@@ -1,0 +1,46 @@
+Criando e entendendo pods
+
+Docker -> Container
+
+Kubernetes -> Pod
+
+Pod: uma capsula que pode conter um ou mais containers dentro dela.
+
+Sempre que nós criamos um pod ele ganha um endereço IP.
+O endereço IP não é mais do container, e sim do nosso pod.
+
+Containers dentro do mesmo pod compartilham os mesmos namespaces de rede e de processo, 
+de comunicação e também podem compartilhar volume.
+Podem fazer comunicação diretamente entre eles via localhost.
+Containers no mesmo pod não podem utilizar o mesmo número de porta.
+
+Pods também se comunicam com pods de diferentes IPs.
+
+Como possuem IP's diferentes, containers em pods diferentes podem utilizar o mesmo número de porta.
+
+-------------------------------------------------------
+
+kubectl run nome_da_imagem --image=qual_imagem
+
+kubectl run nginx-pod --image=nginx:latest
+
+kubectl get pods
+
+kubectl get pods --watch
+
+kubectl describe pod nome_do_pod
+
+kubectl describe pod nginx-pod
+
+kubectl edit pod nginx-pod
+
+--------------------------------------------------------
+
+Ao executamos o nosso primeiro Pod. O Kubernetes armazena as imagens baixadas dentro do cluster,
+quando definimos que um Pod será executado, o scheduler definirá em qual Node isso acontecerá.
+O resultado então é que as imagens quando baixadas de repositórios como o Docker Hub, 
+serão armazenadas localmente em cada Node, não sendo compartilhada por padrão entre todos os membros do cluster.
+
+--------------------------------------------------------
+
+

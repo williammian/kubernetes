@@ -1,0 +1,38 @@
+Conhecendo o Kubernetes
+
+Kubernetes é um sistema de orquestração de contêineres open-source que automatiza a implantação, 
+o dimensionamento e a gestão de aplicações em contêineres.
+
+O Kubernetes é capaz de reiniciar aplicações automaticamente em caso de falhas.
+Gerencia uma ou múltiplas máquinas trabalhando em conjunto (cluster).
+
+-----------------------------------------------------
+
+Arquitetura do Kubernetes
+
+Soluções implementadas para determinadas tipos de caso.
+Resources: pod, rs, deploy, vol, hpa, pv, ing, pvc, svc, sc, ds, quota.
+
+Pod nada mais é do que um recurso que encapsula um container no Kubernete.
+Nunca vamos utilizar um container propriamente dito diretamente no Kubernete, nós vamos utilizar pods.
+
+Master é responsável por coordenar e gerenciar todo o cluster.
+
+Nodes que são responsáveis pela execução do trabalho.
+
+A API, é responsável por receber e executar os novos comandos, ela é uma API REST.
+A comunicação é feita com a API utilizando uma ferramenta chamada kubectl.
+
+O Controller Manager, que é responsável por manter e atualizar o estado desejado; 
+nós temos os scheduler, responsável por definir onde determinado pod, vai ser executado no nosso cluster.
+
+ETCD, responsável por armazenar todos os dados vitais do nosso cluster através de um banco de dados chave-valor.
+
+Dentro do nosso Node nós encontramos dois componentes: 
+o Kubelet, que é responsável pela execução dos poddentro dos nodes; 
+e o KubeProxy, que é responsável pela comunicação entre os nossos nodes dentro do nosso cluster.
+
+A API, além de receber as ordens do mundo externo e do que nós queremos fazer com o nosso cluster, 
+ela é responsável por manter a comunicação com Controller Manager, um ETCD, com Scheduler e também os nossos nodes.
+
+--------------------------------------------------------
