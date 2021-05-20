@@ -43,4 +43,27 @@ serão armazenadas localmente em cada Node, não sendo compartilhada por padrão en
 
 --------------------------------------------------------
 
+Criando pods de maneira declarativa
 
+criar arquivo primeiro-pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: primeiro-pod-declarativo
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx:latest
+      
+Ir na pasta do arquivo
+
+kubectl apply -f .\primeiro-pod.yaml
+
+----------------------------------------------------------
+
+Validador de YAML
+
+https://kubeyaml.com/
+
+-----------------------------------------------------------
