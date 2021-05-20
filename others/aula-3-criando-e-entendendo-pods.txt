@@ -67,3 +67,23 @@ Validador de YAML
 https://kubeyaml.com/
 
 -----------------------------------------------------------
+
+kubectl delete pod nginx-pod
+
+kubectl delete -f .\primeiro-pod.yaml
+
+-----------------------------------------------------------
+
+kubectl exec -it portal-noticias -- bash
+
+kubectl describe pod portal-noticias
+
+Verificar IP
+
+O ip é do Pod (para acesso dentro do cluster)
+
+------------------------------------------------------------
+
+Um pod é dado como encerrado quando todos os containers dentro do pod param de funcionar.
+
+-------------------------------------------------------------
