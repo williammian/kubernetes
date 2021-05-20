@@ -1,0 +1,85 @@
+Expondo pods com services
+
+kubectl get pods -o wide
+
+Services (svc)
+
+Abstrações para expor aplicações executando em um ou mais pods
+
+Proveem IP's fixos para comunicação
+
+Proveem um DNS para um ou mais pods
+
+São capazes de fazer balanceamento de carga
+
+ClusterIP
+
+NodePort
+
+LoadBalancer
+
+---------------------------------------------------------------
+
+Criando um Cluster IP
+
+pod-1.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-1
+spec:
+  containers:
+    - name: container-pod-1
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+pod-2.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-2
+  labels:
+    app: segundo-pod
+spec:
+  containers:
+    - name: container-pod-2
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+
+kubectl apply -f .\pod-1.yaml
+
+kubectl apply -f .\pod-2.yaml
+
+svc-pod-2.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-pod-2
+spec:
+  type: ClusterIP
+  selector:
+    app: segundo-pod
+  ports:
+    - port: 9000
+      targetPort: 80
+
+kubectl apply -f .\svc-pod-2.yaml
+
+kubectl get svc
+        
+kubectl exec -it portal-noticias -- bash
+
+curl 10.104.141.44:80
+
+curl 10.104.141.44:9000
+
+kubectl get pods -o wide
+
+Um service sabe quais pods deve gerenciar através de labels definidas no metadata e utilizando o campo selector no service.
+
+------------------------------------------------------------
