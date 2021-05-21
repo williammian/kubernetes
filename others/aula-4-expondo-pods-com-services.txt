@@ -20,6 +20,10 @@ LoadBalancer
 
 ---------------------------------------------------------------
 
+Labels são responsáveis por definir a relação Service x Pod
+
+---------------------------------------------------------------
+
 Criando um Cluster IP
 
 pod-1.yaml
@@ -83,3 +87,67 @@ kubectl get pods -o wide
 Um service sabe quais pods deve gerenciar através de labels definidas no metadata e utilizando o campo selector no service.
 
 ------------------------------------------------------------
+
+Criando um Node Port
+
+Abre comunicação para o mundo externo.
+
+Também funcionam como CluterIPs
+
+svc-pod-1.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-pod-1
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      #targetPort: 80
+      nodePort: 30000
+  selector:
+    app: primeiro-pod
+      
+kubectl apply -f .\svc-pod-1.yaml
+
+kubectl get nodes -o wide
+
+--------------------------
+
+Ex:
+
+NAME          TYPE        CLUSTER-IP      PORT(S)               
+svc-1       NodePort     10.101.214.22   80:30000/TCP
+
+Dentro do cluster o service escuta na porta 80, enquanto fora do cluster escuta na porta 30000.
+
+Esse service pode ser acessado de fora do cluster utilizando o IP 10.101.214.22.
+
+-----------------------------------------------------------------
+
+Criando um Load Balancer
+
+Abre comunicação para o mundo externo usando o Load Balancer do provedor.
+
+Utilizam automaticamente os balanceadores de carga de cloud providers.
+
+Por serem um Load Balancer, também são um NodePort e ClusterIP ao mesmo tempo.
+
+svc-pod-1-loadbalancer.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-pod-1-loadbalancer
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      nodePort: 30000
+  selector:
+    app: primeiro-pod
+
+-----------------------------------------------------------------
+
+
