@@ -77,4 +77,6 @@ Deployments
 
 Quando criados, Deployments auxiliam com controle de versionamento e criam um ReplicaSet automaticamente.
 
+Pods normalmente são criados através de Deployments, e não individualmente.
+
 ---------------------------------------------------------
