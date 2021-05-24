@@ -35,3 +35,40 @@ ou
 kubectl get replicasets
 
 ------------------------------------------------------
+
+nginx-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+    metadata:
+      name: nginx-pod
+      labels:
+        app: nginx-pod
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx:stable
+          ports:
+            - containerPort: 80
+  selector:
+    matchLabels:
+      app: nginx-pod
+
+--------------------------------------------------------
+
+kubectl rollout history deployment nginx-deployment
+
+kubectl apply -f .\nginx-deployment.yaml --record
+
+kubectl annotate deployment nginx-deployment kubernetes.io/change-cause="Definindo a imagem com versão latest"
+
+kubectl rollout undo deployment nginx-deployment --to-revision=2
+
+kubectl describe pod nginx-deployment-6645687878-bsvcl
+
+---------------------------------------------------------
