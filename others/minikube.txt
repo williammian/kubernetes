@@ -1,0 +1,8 @@
+https://minikube.sigs.k8s.io/docs/start/
+
+kubectl get nodes -o wide
+
+NAME       STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTERNAL-IP   OS-IMAGE               KERNEL-VERSION   CONTAINER-RUNTIME
+minikube   Ready    control-plane,master   34m   v1.20.2   172.29.188.63   <none>        Buildroot 2020.02.12   4.19.182         docker://20.10.6
+
+utilizar INTERNAL-IP para acessar recursos
