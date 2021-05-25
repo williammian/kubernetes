@@ -6,3 +6,7 @@ NAME       STATUS   ROLES                  AGE   VERSION   INTERNAL-IP     EXTER
 minikube   Ready    control-plane,master   34m   v1.20.2   172.29.188.63   <none>        Buildroot 2020.02.12   4.19.182         docker://20.10.6
 
 utilizar INTERNAL-IP para acessar recursos
+
+minikube ssh
+
+sudo mkdir primeiro-volume

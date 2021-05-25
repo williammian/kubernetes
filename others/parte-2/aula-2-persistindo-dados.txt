@@ -1,0 +1,46 @@
+Persistindo dados com volumes
+
+Volumes (vol) possuem ciclos de vida independentes dos containers.
+Porém, são dependentes dos pods.
+
+hostPath - bind de um diretório do nosso host para um diretório de dentro do nosso container do nosso Pod.
+
+--------------------------------------------------------
+
+pod-volume.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-volume
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx:latest
+      volumeMounts:
+        - mountPath: /volume-dentro-do-container
+          name: primeiro-volume
+    - name: jenkins-container
+      image: jenkins/jenkins:alpine
+      volumeMounts:
+        - mountPath: /volume-dentro-do-container
+          name: primeiro-volume
+  volumes:
+    - name: primeiro-volume
+      hostPath:
+        path: /home/primeiro-volume
+        type: DirectoryOrCreate
+
+--------------------------------------------------------
+
+minikube ssh
+
+sudo mkdir primeiro-volume
+
+--------------------------------------------------------
+
+kubectl exec -it pod-volume --container nginx-container -- bash
+
+touch arquivo.txt
+
+----------------------------------------------------------
