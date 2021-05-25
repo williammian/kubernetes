@@ -44,3 +44,106 @@ kubectl exec -it pod-volume --container nginx-container -- bash
 touch arquivo.txt
 
 ----------------------------------------------------------
+
+PersistentVolumes
+
+No GCP, criar um disco com o nome pv-disk
+
+gcePersistentDisk
+
+pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-1
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: pv-disk
+  storageClassName: standard
+  
+No terminal do GCP,
+cat > pv.yaml
+
+executar comando,
+kubectl apply -f pv.yaml
+
+kubectl get pv
+
+-----------------------------------
+
+pvc.yaml
+
+apiversion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-1
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+  
+cat > pvc.yaml
+
+kubectl apply -f pvc.yaml
+
+kubectl get pvc
+
+----------------------------------
+
+pod-pv.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pv
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx:latest
+      volumeMounts:
+        - mountPath: /volume-dentro-do-container
+          name: primeiro-pv
+  volumes:
+    - name: primeiro-pv
+      persistentVolumeClaim:
+        claimName: pvc-1
+        
+cat > pod.yaml
+
+kubectl apply -f pod.yaml
+
+kubectl exec -it pod-pv -- bash
+
+-------------------------------------
+
+Existem diversos tipos de plugins de volumes que podem ser utilizados pelos Cloud Providers, 
+cada um com seu respectivo modo de acesso e nomes. 
+Por exemplo, o GCEPersistentDisk, permite apenas a criação de um PersistentVolume em modo de 
+ReadWriteOnce ou ReadOnlyMany. 
+Diversas outras informações sobre plugins de volumes e modos de acesso podem ser conferidas nesse link da documentação oficial.
+
+https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+
+----------------------------------------
+
+Volumes persistem dados de containers dentro de pods e permitem o compartilhamento de arquivo dentro dos pods.
+
+Volumes possuem ciclo de vida independente dos containers, porém, vinculados aos pods.
+
+PersistentVolumes persistem dados de pods como um todo.
+
+PersistentVolumes possuem ciclo de vida independente de quaisquer outros recursos, inclusive pods.
+
+Precisamos de um PersistentVolumeClaim para acessar um PersistentVolume
+
+-----------------------------------------
+
+
