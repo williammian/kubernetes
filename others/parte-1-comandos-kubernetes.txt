@@ -1,0 +1,203 @@
+https://www.rtancman.com.br/kubernetes/kubernetes-para-iniciantes.html
+
+Parte 1
+
+Comandos kubernetes
+
+Ver os que estão configurados:
+kubectl config get-contexts
+
+Para selecionar um contexto:
+kubectl config use-context docker-for-desktop
+
+Pod com o Wordpress baseado em uma imagem do Docker:
+
+wp-dumb.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meu-blog
+  labels:
+    app: wordpress
+spec:
+  containers:
+  - name: meu-blog-wp-1
+    image: wordpress:php7.2-fpm
+    ports:
+    - containerPort: 9000
+    
+---------------------------------
+   
+Aplicar/subir o pod:
+kubectl apply -f wp-dumb.yaml
+
+Listar todos os pods rodando:
+kubectl get pods
+
+Para buscar um pod por nome:
+kubectl get pods meu-blog
+
+Para buscar um pod por label:
+kubectl get pods -l app=wordpress
+
+Para retornar em outro formato de output:
+kubectl get pods -l app=wordpress -o yaml
+kubectl get pods -l app=wordpress -o json
+
+Acessar o Pod:
+kubectl exec -it meu-blog bash
+root@meu-blog:/var/www/html#
+
+Descrição do Pod
+kubectl describe pods -l app=wordpress
+kubectl describe pods meu-blog
+
+Copiando arquivos para o container ou do container para a sua máquina com o comando cp rodando o kubectl cp:
+# criando um arquivo qualquer
+echo "lala" > arquivo-lala.txt
+
+# copiando um arquivo para o container
+kubectl cp arquivo-lala.txt meu-blog:/var/www/html
+
+# copiando um arquivo do container para sua maquina
+kubectl cp meu-blog:/var/www/html/arquivo-lala.txt arquivo-lele.txt
+
+Verificando CPU e Memoria com o comando top rodando o kubectl top:
+kubectl top pods -l app=wordpress
+kubectl top pods meu-blog
+
+Remover um Pod rodando o kubectl delete:
+kubectl delete pods -l app=wordpress
+kubectl delete pods meu-blog
+
+-------------------------------------------
+
+wp-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meu-blog-escalavel
+  labels:
+    app: wordpress-escalavel
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordpress-escalavel
+  template:
+    metadata:
+      labels:
+        app: wordpress-escalavel
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:5.4.2-php7.2-apache
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mariadb-service
+        - name: WORDPRESS_DB_USER
+          value: wp-user
+        - name: WORDPRESS_DB_PASSWORD
+          value: q1w2e3r4
+        - name: WORDPRESS_DB_NAME
+          value: wp-k8s
+        ports:
+        - containerPort: 80
+        
+kubectl apply -f wp-deployment.yaml
+
+kubectl get pods -l app=wordpress-escalavel
+
+kubectl scale deployment meu-blog-escalavel --replicas=5
+
+--------------------------------------------
+
+wp-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: meu-blog-escalavel-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: wordpress-escalavel
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80
+
+kubectl apply -f wp-service.yaml
+
+kubectl get service
+
+NAME TYPE CLUSTER-IP EXTERNAL-IP PORT(S) AGE
+meu-blog-escalavel-service ClusterIP 10.102.166.220 localhost 8080/TCP 7m57s
+
+----------------------------------------------
+
+wp-mariadb.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-wp
+spec:
+  selector:
+    matchLabels:
+      app: mariadb-wp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb-wp
+    spec:
+      containers:
+      - name: mariadb-wp
+        image: rtancman/mariadb-local
+        imagePullPolicy: "Always"
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: adminroot
+        - name: MYSQL_USER
+          value: wp-user
+        - name: MYSQL_PASSWORD
+          value: q1w2e3r4
+        - name: MYSQL_DATABASE
+          value: wp-k8s
+        ports:
+        - containerPort: 3306
+          name: mariadb-wp
+
+----------------------------------------------
+
+wp-mariadb-service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: mariadb-wp
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+      
+kubectl apply -f wp-mariadb.yaml
+
+kubectl apply -f wp-mariadb-service.yaml
+
+http://localhost:8080/
+
+------------------------------------------------
+
+
+
+
+

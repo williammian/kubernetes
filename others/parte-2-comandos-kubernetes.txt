@@ -1,0 +1,427 @@
+https://www.rtancman.com.br/kubernetes/kubernetes-para-iniciantes-parte-2.html
+
+Parte 2
+
+Comandos Kubernetes
+
+wp-configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meu-blog-escalavel-configmap
+data:
+  WORDPRESS_DB_HOST: "mariadb-service"
+  WORDPRESS_DB_PORT: "3306"
+  WORDPRESS_DB_NAME: "wp-k8s"
+
+kubectl apply -f wp-configmap.yaml
+kubectl get configmap
+
+# resultado
+NAME DATA AGE
+meu-blog-escalavel-configmap 2 11m
+
+# rodando o describe
+kubectl describe configmap meu-blog-escalavel-configmap
+
+---------------------------------------
+
+wp-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meu-blog-escalavel
+  labels:
+    app: wordpress-escalavel
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordpress-escalavel
+  template:
+    metadata:
+      labels:
+        app: wordpress-escalavel
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:5.4.2-php7.2-apache
+        env:
+        - name: WORDPRESS_DB_USER
+          value: wp-user
+        - name: WORDPRESS_DB_PASSWORD
+          value: q1w2e3r4
+        - name: WORDPRESS_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_HOST
+        - name: WORDPRESS_DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_PORT
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 80
+
+------------------------------------------------------
+
+wp-mariadb.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-wp
+spec:
+  selector:
+    matchLabels:
+      app: mariadb-wp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb-wp
+    spec:
+      containers:
+      - name: mariadb-wp
+        image: rtancman/mariadb-local
+        imagePullPolicy: "Always"
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: adminroot
+        - name: MYSQL_USER
+          value: wp-user
+        - name: MYSQL_PASSWORD
+          value: q1w2e3r4
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 3306
+          name: mariadb-wp
+
+kubectl apply -f wp-deployment.yaml
+kubectl apply -f wp-mariadb.yaml
+
+-------------------------------------------
+
+Antes de criar o arquivo vamos precisar colocar os valores de login e senha do banco em base64 encode.
+
+echo -n  "adminroot" | base64
+#resultado
+YWRtaW5yb290
+
+echo -n  "wp-user" | base64
+#resultado
+d3AtdXNlcg==
+
+echo -n  "q1w2e3r4" | base64
+#resultado
+cTF3MmUzcjQ=
+
+-----------------------------------------------
+
+wp-secrets.yaml
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: meu-blog-escalavel-secrets
+type: Opaque
+data:
+  mariadb_username: d3AtdXNlcg==
+  mariadb_password: cTF3MmUzcjQ=
+  mariadb_root_password: YWRtaW5yb290
+
+---------------------------------------------------
+
+kubectl apply -f wp-secrets.yaml
+kubectl get secrets meu-blog-escalavel-secrets
+#resultado
+NAME TYPE DATA AGE
+meu-blog-escalavel-secrets Opaque 3 9s
+
+kubectl describe secrets meu-blog-escalavel-secrets
+
+--------------------------------------------------
+
+Alterar wp-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meu-blog-escalavel
+  labels:
+    app: wordpress-escalavel
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: wordpress-escalavel
+  template:
+    metadata:
+      labels:
+        app: wordpress-escalavel
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:5.4.2-php7.2-apache
+        env:
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_password
+        - name: WORDPRESS_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_HOST
+        - name: WORDPRESS_DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_PORT
+        - name: WORDPRESS_DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 80
+
+--------------------------------------------------------
+
+Alterar wp-mariadb.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-wp
+spec:
+  selector:
+    matchLabels:
+      app: mariadb-wp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb-wp
+    spec:
+      containers:
+      - name: mariadb-wp
+        image: rtancman/mariadb-local
+        imagePullPolicy: "Always"
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_root_password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 3306
+          name: mariadb-wp
+
+------------------------------------------------------
+
+kubectl apply -f wp-deployment.yaml
+kubectl apply -f wp-mariadb.yaml
+
+--------------------------------------------------------
+
+Volumes
+
+PersistentVolume e o PersistentVolumeClaim
+
+wp-mariadb-pv.yaml
+
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-pv-volume
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+-----------------------------------------------
+
+wp-mariadb.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-wp
+spec:
+  selector:
+    matchLabels:
+      app: mariadb-wp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mariadb-wp
+    spec:
+      containers:
+      - name: mariadb-wp
+        image: rtancman/mariadb-local
+        imagePullPolicy: "Always"
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_root_password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 3306
+          name: mariadb-wp
+        volumeMounts:
+        - name: mariadb-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mariadb-persistent-storage
+        persistentVolumeClaim:
+          claimName: mariadb-pv-claim
+
+kubectl apply -f wp-mariadb-pv.yaml
+kubectl apply -f wp-mariadb.yaml
+
+# verificando os nossos volumes
+kubectl get pvc mariadb-pv-claim
+kubectl get pv mariadb-pv-volume
+
+------------------------------------------------------
+
+StatefulSets
+
+wp-mariadb-statefullsets.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb-wp
+spec:
+  selector:
+    matchLabels:
+      app: mariadb-wp
+  serviceName: mariadb-service
+  template:
+    metadata:
+      labels:
+        app: mariadb-wp
+    spec:
+      containers:
+      - name: mariadb-wp
+        image: rtancman/mariadb-local
+        imagePullPolicy: "Always"
+        env:
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: meu-blog-escalavel-secrets
+              key: mariadb_root_password
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: meu-blog-escalavel-configmap
+              key: WORDPRESS_DB_NAME
+        ports:
+        - containerPort: 3306
+          name: mariadb-wp
+        volumeMounts:
+        - name: mariadb-persistent-storage
+          mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-persistent-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 20Gi
+
+# vamos apagar as configurações passadas
+kubectl delete deployments mariadb-wp
+kubectl delete pvc mariadb-pv-claim
+kubectl delete pv mariadb-pv-volume
+
+kubectl apply -f wp-mariadb-statefullsets.yaml
+# verificando os nossos volumes
+kubectl get pvc mariadb-pv-claim
+kubectl get pv mariadb-pv-volume
+
+---------------------------------------------------------
