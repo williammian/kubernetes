@@ -1,0 +1,182 @@
+Storage Classes e StatefulSets
+
+GCEPersistentDisk
+
+Criar Volumes, Persistent Volumes, no caso, e discos dinamicamente.
+
+No GCP
+
+Storage Classes
+
+StorageClasses fornecem dinamismo para criação de PersistentVolumes conforme demanda.
+
+StorageClasses também são capazes de criar discos de armazenamento.
+
+Clusters possuem StorageClasses "default" e podem ser usados automaticamente se não definirmos qual será utilizado.
+
+sc.yaml
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+    name: slow
+provisioner: kubernetes.io/gce-pd
+parameters:
+    type: pd-standard
+    fstype: ext4
+    
+---------------------------------
+
+cat > sc.yaml
+
+kubectl apply -f sc.yaml
+
+kubectl get sc
+
+--------------------------------
+
+pvc-sc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-2
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: slow
+  
+--------------------------------
+
+cat > pvc-sc.yaml
+
+kubectl apply -f pvc-sc.yaml
+
+kubectl get pvc
+
+-------------------------------
+
+pod-sc.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-sc
+spec:
+  containers:
+    - name: nginx-container
+      image: nginx:latest
+      volumeMounts:
+        - mountPath: /volume-dentro-do-container
+          name: primeiro-pv
+  volumes:
+    - name: primeiro-pv
+      persistentVolumeClaim:
+        claimName: pvc-2
+        
+----------------------------------
+
+cat > pod-sc.yaml
+
+kubectl apply -f pod-sc.yaml
+
+----------------------------------
+
+kubectl exec -it pod-sc -- bash
+
+touch arquivo-sc.txt
+
+---------------------------------
+
+kubectl delete pod --all
+
+kubectl delete pvc --all
+
+kubectl delete sc --all
+
+----------------------------------------------------------------------------------
+
+StatefulSets
+
+sistema-noticias-statefulset.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sistema-noticias-statefulset
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sistema-noticias
+      name: sistema-noticias
+    spec:
+      containers:
+        - name: sistema-noticias-container
+          image: aluracursos/sistema-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: sistema-configmap
+          volumeMounts:
+            - name: imagens
+              mountPath: /var/www/html/uploads
+            - name: sessao
+              mountPath: /tmp
+    volumes:
+      - name: imagens
+        persistentVolumeClaim:
+          claimName: imagens-pvc
+      - name: sessao
+        persistentVolumeClaim:
+          claimName: sessao-pvc
+  selector:
+    matchLabels:
+      app: sistema-noticias
+  serviceName: svc-sistema-noticias
+  
+----------------------------------------------------
+
+StatefulSets podem ser usados quando estados devem ser persistidos.
+
+StatefulSets usam PersistentVolumes e PersistentVolumeClaims para persistência de dados.
+
+----------------------------------------------------
+
+imagens-pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: imagens-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+      
+-----------------------------------------------------
+
+sessao-pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sessao-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+----------------------------------------------------
+
+
+
