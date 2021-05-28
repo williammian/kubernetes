@@ -89,3 +89,133 @@ Ele indicará falha caso o código de retorno seja menor que 200 ou maior/igual a 
 
 Utilizando Readiness Probes
 
+O container dentro do Pod pode ainda não estar 100% para receber requisições!
+
+portal-noticias-deployment.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sistema-noticias-statefulset
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sistema-noticias
+      name: sistema-noticias
+    spec:
+      containers:
+        - name: sistema-noticias-container
+          image: aluracursos/sistema-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: sistema-configmap
+          volumeMounts:
+            - name: imagens
+              mountPath: /var/www/html/uploads
+            - name: sessao
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 3
+            initialDelaySeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /inserir_noticias.php
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 5
+            initialDelaySeconds: 3
+      volumes:
+        - name: imagens
+          persistentVolumeClaim:
+            claimName: imagens-pvc
+        - name: sessao
+          persistentVolumeClaim:
+            claimName: sessao-pvc
+  selector:
+    matchLabels:
+      app: sistema-noticias
+  serviceName: svc-sistema-noticias
+  
+-------------------------------------------------
+
+sistema-noticias-statefulset.yaml
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sistema-noticias-statefulset
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sistema-noticias
+      name: sistema-noticias
+    spec:
+      containers:
+        - name: sistema-noticias-container
+          image: aluracursos/sistema-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: sistema-configmap
+          volumeMounts:
+            - name: imagens
+              mountPath: /var/www/html/uploads
+            - name: sessao
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 3
+            initialDelaySeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /inserir_noticias.php
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 5
+            initialDelaySeconds: 3
+      volumes:
+        - name: imagens
+          persistentVolumeClaim:
+            claimName: imagens-pvc
+        - name: sessao
+          persistentVolumeClaim:
+            claimName: sessao-pvc
+  selector:
+    matchLabels:
+      app: sistema-noticias
+  serviceName: svc-sistema-noticias
+  
+--------------------------------------------------
+
+O Kubernetes nem sempre tem como saber se a aplicação está saudável.
+
+Podemos criar critérios para definir se a aplicação está saudável através de probes.
+
+Como criar LivenessProbes com o campo livenessProbe.
+
+LivenessProbes podem fazer a verificação em diferentes intervalos de tempo via HTTP.
+
+Como criar ReadinessProbes com o campo readinessProbe.
+
+ReadinessProbes podem fazer a verificação em diferentes intervalos de tempo via HTTP.
+
+LivenessProbes são para saber se a aplicação está saudável e/ou se deve ser reiniciada, 
+enquanto ReadinessProbes são para saber se a aplicação já está pronta para receber requisições depois de iniciar.
+
+Além do HTTP, também podemos fazer verificações via TCP.
+
+----------------------------------------------------
