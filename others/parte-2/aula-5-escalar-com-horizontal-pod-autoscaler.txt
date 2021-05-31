@@ -1,0 +1,134 @@
+Como escalar com o Horizontal Pod Autoscaler
+
+hpa
+
+portal-noticias-deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-noticias-deployment
+spec:
+  template:
+    metadata:
+      name: portal-noticias
+      labels:
+        app: portal-noticias
+    spec:
+      containers:
+        - name: portal-noticias-container
+          image: aluracursos/portal-noticias:1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: portal-configmap
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 3
+            initialDelaySeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            periodSeconds: 10
+            failureThreshold: 5
+            initialDelaySeconds: 3
+          resources:
+            requests:
+              cpu: 10m
+  replicas: 3
+  selector:
+    matchLabels:
+      app: portal-noticias
+      
+--------------------------------------
+
+	  resources:
+            requests:
+              cpu: 10m
+              
+---------------------------------------
+
+portal-noticias-hpa.yaml
+
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: portal-noticias-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: portal-noticias-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+          
+-----------------------------------------
+
+kubectl get hpa
+
+-----------------------------------------
+
+kubectl describe hpa portal-noticias-hpa
+
+-----------------------------------------
+
+Necessário definir um servidor de métricas para que haja o funcionamento da maneira esperada.
+
+-----------------------------------------
+
+kubernetes-sigs/metrics-server
+
+-----------------------------------------
+
+https://github.com/kubernetes-sigs/metrics-server/releases
+
+-----------------------------------------
+
+0.3.7
+
+components.yaml
+
+- --kubelet-insecure-tls
+
+kubectl apply -f .\components.yaml
+
+-------------------------------------------
+
+minikube addons list
+
+minikube addons enable metrics-server
+
+-------------------------------------------
+
+VerticalPodAutoscaler
+
+Além do HorizontalPodAutoscaler, o Kubernetes possui um recurso customizado chamado VerticalPodAutoscaler.
+O VerticalPodAutoscaler remove a necessidade de definir limites e pedidos por recursos do sistema, como cpu e memória. 
+Quando definido, ele define os consumos de maneira automática baseada na utilização em cada um dos nós, 
+além disso, quanto tem disponível ainda de recurso.
+
+Algumas configurações extras são necessárias para utilizar o VerticalPodAutoscaler.
+Mais informações podem ser obtidas nesse link.
+https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
+
+Também podemos ver mais informações específicas sobre diferentes Cloud Providers, como o GCP e a AWS.
+
+https://cloud.google.com/kubernetes-engine/docs/concepts/verticalpodautoscaler
+
+https://docs.aws.amazon.com/eks/latest/userguide/vertical-pod-autoscaler.html
+
+--------------------------------------------
+
+
